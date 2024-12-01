@@ -7,7 +7,7 @@
 use crate::lint::BevyLint;
 use rustc_lint::{Lint, LintStore};
 
-pub mod duplicate_bevy_dependencies;
+pub mod cargo;
 pub mod insert_event_resource;
 pub mod main_return_without_appexit;
 pub mod missing_reflect;
@@ -23,7 +23,7 @@ pub(crate) static LINTS: &[&BevyLint] = &[
     panicking_methods::PANICKING_WORLD_METHODS,
     plugin_not_ending_in_plugin::PLUGIN_NOT_ENDING_IN_PLUGIN,
     zst_query::ZST_QUERY,
-    duplicate_bevy_dependencies::DUPLICATE_BEVY_DEPENDENCIES,
+    cargo::DUPLICATE_BEVY_DEPENDENCIES,
 ];
 
 pub(crate) fn register_lints(store: &mut LintStore) {
@@ -38,7 +38,6 @@ pub(crate) fn register_passes(store: &mut LintStore) {
     store.register_late_pass(|_| Box::new(panicking_methods::PanickingMethods));
     store.register_late_pass(|_| Box::new(plugin_not_ending_in_plugin::PluginNotEndingInPlugin));
     store.register_late_pass(|_| Box::new(zst_query::ZstQuery));
-    store.register_late_pass(|_| {
-        Box::new(duplicate_bevy_dependencies::DuplicateBevyDependencies::default())
-    });
+    // registers all cargo lints
+    store.register_late_pass(|_| Box::new(cargo::Cargo::default()));
 }

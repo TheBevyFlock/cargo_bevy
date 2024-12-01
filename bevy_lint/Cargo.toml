@@ -27,6 +27,11 @@ harness = false
 [dependencies]
 # Easy error propagation and contexts.
 anyhow = "1.0.86"
+# Easy structured output for `cargo metadata`, used for cargo lints
+cargo_metadata = "0.19"
+# Deserializes the Cargo.toml for cargo lints
+toml = "0.8.19"
+serde = { version = "1.0.210", features = ["derive"] }
 
 # Contains a series of useful utilities when writing lints. The version and commit were chosen to
 # work with the currently pinned nightly Rust version. When the Rust version changes, this too
@@ -47,7 +52,7 @@ toml_edit = { version = "0.22.22", default-features = false, features = [
 bevy = { version = "0.14.2", default-features = false }
 
 # Used to deserialize `--message-format=json` messages from Cargo.
-serde = { version = "1.0.210", features = ["derive"] }
+#serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
 
 # Ensures the error messages for lints do not regress.
