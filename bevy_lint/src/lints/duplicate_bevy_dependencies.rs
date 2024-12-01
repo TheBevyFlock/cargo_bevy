@@ -6,9 +6,9 @@
 //! errors and type incompatibilities.
 
 use crate::declare_bevy_lint;
-use clippy_utils::{diagnostics::span_lint, find_crates};
+use clippy_utils::{diagnostics::span_lint, find_crates, sym};
 use rustc_lint::{LateContext, LateLintPass};
-use rustc_session::declare_lint_pass;
+use rustc_session::impl_lint_pass;
 use rustc_span::Symbol;
 
 declare_bevy_lint! {
@@ -17,13 +17,25 @@ declare_bevy_lint! {
     "duplicate bevy dependencies",
 }
 
-declare_lint_pass! {
+pub(crate) struct DuplicateBevyDependencies {
+    bevy_symbol: Symbol,
+}
+
+impl Default for DuplicateBevyDependencies {
+    fn default() -> Self {
+        Self {
+            bevy_symbol: sym!(bevy),
+        }
+    }
+}
+
+impl_lint_pass! {
      DuplicateBevyDependencies => [DUPLICATE_BEVY_DEPENDENCIES.lint]
 }
 
 impl<'tcx> LateLintPass<'tcx> for DuplicateBevyDependencies {
     fn check_crate(&mut self, cx: &LateContext<'tcx>) {
-        let bevy_crates = find_crates(cx.tcx, Symbol::intern("bevy"));
+        let bevy_crates = find_crates(cx.tcx, self.bevy_symbol);
 
         if bevy_crates.len() > 1 {
             let span = cx.tcx.def_span(bevy_crates[1].def_id());

@@ -38,5 +38,7 @@ pub(crate) fn register_passes(store: &mut LintStore) {
     store.register_late_pass(|_| Box::new(panicking_methods::PanickingMethods));
     store.register_late_pass(|_| Box::new(plugin_not_ending_in_plugin::PluginNotEndingInPlugin));
     store.register_late_pass(|_| Box::new(zst_query::ZstQuery));
-    store.register_late_pass(|_| Box::new(duplicate_bevy_dependencies::DuplicateBevyDependencies));
+    store.register_late_pass(|_| {
+        Box::new(duplicate_bevy_dependencies::DuplicateBevyDependencies::default())
+    });
 }
