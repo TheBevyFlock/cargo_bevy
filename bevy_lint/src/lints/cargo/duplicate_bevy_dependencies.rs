@@ -60,13 +60,12 @@ fn lint_with_target_version(
     let target_version = get_version_from_toml(bevy_cargo.as_ref()).unwrap();
     let bevy_cargo_toml_span = toml_span(bevy_cargo.span(), file);
 
-    let missmatching_dependencies = bevy_dependents
+    let mismatching_dependencies = bevy_dependents
         .iter()
         .filter(|dependency| !dependency.1.matches(&target_version));
 
-    for missmatching_dependency in missmatching_dependencies {
-        if let Some(cargo_toml_reference) = cargo_toml.dependencies.get(*missmatching_dependency.0)
-        {
+    for mismatching_dependency in mismatching_dependencies {
+        if let Some(cargo_toml_reference) = cargo_toml.dependencies.get(*mismatching_dependency.0) {
             span_lint_and_then(
                 cx,
                 DUPLICATE_BEVY_DEPENDENCIES.lint,
