@@ -10,9 +10,12 @@ use std::{collections::HashMap, path::Path, str::FromStr, sync::Arc};
 use crate::lints::cargo::{toml_span, CargoToml, DUPLICATE_BEVY_DEPENDENCIES};
 use cargo_metadata::{
     semver::{Error, Version, VersionReq},
-    Metadata,
+    Metadata, Resolve,
 };
-use clippy_utils::{diagnostics::span_lint_and_then, find_crates};
+use clippy_utils::{
+    diagnostics::{span_lint, span_lint_and_then},
+    find_crates,
+};
 use rustc_hir::def_id::LOCAL_CRATE;
 use rustc_lint::LateContext;
 use rustc_span::{SourceFile, Symbol};
@@ -45,7 +48,11 @@ pub(super) fn check(cx: &LateContext<'_>, metadata: &Metadata, bevy_symbol: Symb
             Some(bevy_cargo) => {
                 lint_with_target_version(cx, &cargo_toml, &file, bevy_cargo, &bevy_dependents);
             }
-            None => minimal_lint(cx, &bevy_dependents),
+            None => {
+                if let Some(resolve) = &metadata.resolve {
+                    minimal_lint(cx, &bevy_dependents, resolve);
+                };
+            }
         };
     }
 }
@@ -82,6 +89,62 @@ fn lint_with_target_version(
     }
 }
 
+fn minimal_lint(
+    cx: &LateContext<'_>,
+    bevy_dependents: &HashMap<&str, VersionReq>,
+    resolved: &Resolve,
+) {
+    let mut dependancies = resolved
+        .nodes
+        .iter()
+        .filter_map(|node| {
+            // "id": "file:///path/to/my-package#0.1.0",
+            // "id": "registry+https://github.com/rust-lang/crates.io-index#bevy@0.9.1",
+            // "id": "registry+https://github.com/rust-lang/crates.io-index#regex@1.11.1",
+            if node.id.repr.starts_with("file:///") {
+                todo!()
+            }
+            if let Some((id, _version)) = node.id.repr.split_once('@') {
+                if bevy_dependents
+                    .keys()
+                    .any(|crate_name| id.ends_with(crate_name))
+                {
+                    return Some(
+                        node.dependencies
+                            .iter()
+                            .filter_map(|dep| {
+                                if dep.repr.contains("bevy@") {
+                                    return Some(
+                                        dep.repr
+                                            .split('@')
+                                            .nth(1)
+                                            .expect("resolved crate to contain <url>@<version>"),
+                                    );
+                                }
+                                None
+                            })
+                            .collect::<Vec<&str>>(),
+                    );
+                }
+            }
+            None
+        })
+        .flatten()
+        .collect::<Vec<&str>>();
+
+    dependancies.sort_unstable();
+    dependancies.dedup();
+
+    if dependancies.len() > 1 {
+        span_lint(
+            cx,
+            DUPLICATE_BEVY_DEPENDENCIES.lint,
+            rustc_span::DUMMY_SP,
+            "found multiple versions of bevy",
+        );
+    }
+}
+
 fn get_version_from_toml(table: &toml::Value) -> Result<Version, Error> {
     // TODO: make this more robust, this fails if someone uses version ranges for bevy
     match table {
@@ -96,8 +159,4 @@ fn get_version_from_toml(table: &toml::Value) -> Result<Version, Error> {
         }
         _ => panic!("impossible to hit"),
     }
-}
-
-fn minimal_lint(cx: &LateContext<'_>, bevy_dependents: &HashMap<&str, VersionReq>) {
-    todo!()
 }
