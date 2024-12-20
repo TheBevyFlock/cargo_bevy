@@ -94,7 +94,7 @@ fn minimal_lint(
     bevy_dependents: &HashMap<&str, VersionReq>,
     resolved: &Resolve,
 ) {
-    let mut dependancies = resolved
+    let mut dependencies = resolved
         .nodes
         .iter()
         .filter_map(|node| {
@@ -132,10 +132,10 @@ fn minimal_lint(
         .flatten()
         .collect::<Vec<&str>>();
 
-    dependancies.sort_unstable();
-    dependancies.dedup();
+    dependencies.sort_unstable();
+    dependencies.dedup();
 
-    if dependancies.len() > 1 {
+    if dependencies.len() > 1 {
         span_lint(
             cx,
             DUPLICATE_BEVY_DEPENDENCIES.lint,
