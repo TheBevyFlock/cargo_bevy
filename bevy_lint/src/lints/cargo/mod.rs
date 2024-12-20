@@ -2,7 +2,7 @@ use crate::declare_bevy_lint;
 use cargo_metadata::MetadataCommand;
 use clippy_utils::{diagnostics::span_lint, sym};
 use rustc_lint::{LateContext, LateLintPass};
-use rustc_session::impl_lint_pass;
+use rustc_session::{impl_lint_pass, utils::was_invoked_from_cargo};
 use rustc_span::{BytePos, Pos, SourceFile, Span, Symbol, SyntaxContext};
 use serde::Deserialize;
 use std::{collections::BTreeMap, ops::Range};
@@ -34,6 +34,11 @@ impl Default for Cargo {
 
 impl LateLintPass<'_> for Cargo {
     fn check_crate(&mut self, cx: &LateContext<'_>) {
+        // If rustc was not launched by cargo, skip all cargo based lints
+        if !was_invoked_from_cargo() {
+            return;
+        }
+
         match MetadataCommand::new().exec() {
             Ok(metadata) => {
                 duplicate_bevy_dependencies::check(cx, &metadata, self.bevy_symbol);
