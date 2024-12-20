@@ -1,0 +1,20 @@
+error: parameter takes `&mut ResMut` instead of a re-borrowed `ResMut`
+  --> tests/ui/borrowed_reborrowable/resource.rs:19:22
+   |
+19 | fn mutable_reference(_res: &mut ResMut<Data>) {
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^ help: use `ResMut` instead: `mut _res: bevy::prelude::ResMut<'_, Data>`
+   |
+note: the lint level is defined here
+  --> tests/ui/borrowed_reborrowable/resource.rs:5:9
+   |
+5  | #![deny(bevy::borrowed_reborrowable)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: parameter takes `&mut ResMut` instead of a re-borrowed `ResMut`
+  --> tests/ui/borrowed_reborrowable/resource.rs:25:33
+   |
+25 | fn mutable_reference_return<'a>(_res: &'a mut ResMut<Data>) -> usize {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `ResMut` instead: `mut _res: bevy::prelude::ResMut<'_, Data>`
+
+error: aborting due to 2 previous errors
+

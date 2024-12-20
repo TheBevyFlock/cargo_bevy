@@ -1,0 +1,20 @@
+error: parameter takes `&mut EntityMut` instead of a re-borrowed `EntityMut`
+  --> tests/ui/borrowed_reborrowable/entity_mut.rs:17:22
+   |
+17 | fn mutable_reference(_param: &mut EntityMut) {
+   |                      ^^^^^^^^^^^^^^^^^^^^^^ help: use `EntityMut` instead: `mut _param: bevy::prelude::EntityMut<'_>`
+   |
+note: the lint level is defined here
+  --> tests/ui/borrowed_reborrowable/entity_mut.rs:5:9
+   |
+5  | #![deny(bevy::borrowed_reborrowable)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: parameter takes `&mut EntityMut` instead of a re-borrowed `EntityMut`
+  --> tests/ui/borrowed_reborrowable/entity_mut.rs:23:33
+   |
+23 | fn mutable_reference_return<'a>(_param: &'a mut EntityMut) -> usize {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `EntityMut` instead: `mut _param: bevy::prelude::EntityMut<'_>`
+
+error: aborting due to 2 previous errors
+

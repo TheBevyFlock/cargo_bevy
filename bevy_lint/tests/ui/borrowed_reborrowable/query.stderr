@@ -1,0 +1,20 @@
+error: parameter takes `&mut Query` instead of a re-borrowed `Query`
+  --> tests/ui/borrowed_reborrowable/query.rs:17:22
+   |
+17 | fn mutable_reference(query: &mut Query<Entity>) {
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `Query` instead: `mut query: bevy::prelude::Query<'_, '_, bevy::prelude::Entity>`
+   |
+note: the lint level is defined here
+  --> tests/ui/borrowed_reborrowable/query.rs:5:9
+   |
+5  | #![deny(bevy::borrowed_reborrowable)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: parameter takes `&mut Query` instead of a re-borrowed `Query`
+  --> tests/ui/borrowed_reborrowable/query.rs:23:33
+   |
+23 | fn mutable_reference_return<'a>(_query: &'a mut Query<Entity>) -> usize {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `Query` instead: `mut _query: bevy::prelude::Query<'_, '_, bevy::prelude::Entity>`
+
+error: aborting due to 2 previous errors
+

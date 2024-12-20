@@ -83,6 +83,20 @@ impl Package {
                 .any(|target_kind| *target_kind == TargetKind::Bin)
         })
     }
+
+    /// An iterator over all binary targets contained in this package.
+    pub fn bin_targets(&self) -> impl Iterator<Item = &Target> {
+        self.targets
+            .iter()
+            .filter(|target| target.kind.iter().any(|kind| *kind == TargetKind::Bin))
+    }
+
+    /// An iterator over all example targets contained in this package.
+    pub fn example_targets(&self) -> impl Iterator<Item = &Target> {
+        self.targets
+            .iter()
+            .filter(|target| target.kind.iter().any(|kind| *kind == TargetKind::Example))
+    }
 }
 
 #[derive(Debug, Deserialize)]

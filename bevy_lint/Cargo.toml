@@ -25,6 +25,11 @@ name = "ui"
 harness = false
 
 [dependencies]
+# Contains a series of useful utilities when writing lints. The version is chosen to work with the
+# currently pinned nightly Rust version. When the Rust version changes, this too needs to be
+# updated!
+clippy_utils = "=0.1.85"
+
 # Easy error propagation and contexts.
 anyhow = "1.0.86"
 # Easy structured output for `cargo metadata`, used for cargo lints
@@ -32,14 +37,6 @@ cargo_metadata = "0.19"
 # Deserializes the Cargo.toml for cargo lints
 toml = "0.8.19"
 serde = { version = "1.0.210", features = ["derive"] }
-
-# Contains a series of useful utilities when writing lints. The version and commit were chosen to
-# work with the currently pinned nightly Rust version. When the Rust version changes, this too
-# needs to be updated!
-[dependencies.clippy_utils]
-version = "=0.1.84"
-git = "https://github.com/rust-lang/rust-clippy"
-rev = "81dceed8baf324960ea05e9079b749305b16a7cc"
 
 [build-dependencies]
 # Parse `rust-toolchain.toml` at build time.

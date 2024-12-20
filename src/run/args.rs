@@ -24,6 +24,11 @@ impl RunArgs {
         self.cargo_args.compilation_args.profile()
     }
 
+    /// The targeted platform.
+    pub(crate) fn target(&self) -> Option<String> {
+        self.cargo_args.compilation_args.target(self.is_web())
+    }
+
     /// Generate arguments for `cargo`.
     pub(crate) fn cargo_args_builder(&self) -> ArgBuilder {
         self.cargo_args.args_builder(self.is_web())

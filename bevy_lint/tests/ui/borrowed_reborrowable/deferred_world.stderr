@@ -1,0 +1,20 @@
+error: parameter takes `&mut DeferredWorld` instead of a re-borrowed `DeferredWorld`
+  --> tests/ui/borrowed_reborrowable/deferred_world.rs:17:22
+   |
+17 | fn mutable_reference(_param: &mut DeferredWorld) {
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `DeferredWorld` instead: `mut _param: bevy::bevy_ecs::world::DeferredWorld<'_>`
+   |
+note: the lint level is defined here
+  --> tests/ui/borrowed_reborrowable/deferred_world.rs:5:9
+   |
+5  | #![deny(bevy::borrowed_reborrowable)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: parameter takes `&mut DeferredWorld` instead of a re-borrowed `DeferredWorld`
+  --> tests/ui/borrowed_reborrowable/deferred_world.rs:23:33
+   |
+23 | fn mutable_reference_return<'a>(_param: &'a mut DeferredWorld) -> usize {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `DeferredWorld` instead: `mut _param: bevy::bevy_ecs::world::DeferredWorld<'_>`
+
+error: aborting due to 2 previous errors
+

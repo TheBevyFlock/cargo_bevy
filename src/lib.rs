@@ -3,6 +3,5 @@
 pub mod build;
 pub mod external_cli;
 pub mod lint;
-pub mod manifest;
 pub mod run;
 pub mod template;

@@ -1,12 +1,12 @@
-# Release Checklist
+# How to Release `bevy_lint`
 
 ## Kick-off Pull Request
 
-1. Review the [changelog](../CHANGELOG.md) and ensure that all notable changes have been documented.
+1. Review the [changelog](../../CHANGELOG.md) and ensure that all notable changes have been documented.
 2. Replace `[Unreleased]` heading with the version with the format `[X.Y.Z] - YYYY-MM-DD`.
 3. Update the `**All Changes**` link to compare from `main` to the new tag `lint-vX.Y.Z`. (E.g. `lint-v0.1.0...main` to `lint-v0.1.0...lint-v0.2.0`.)
-4. Remove the `-dev` suffix from the version in [`Cargo.toml`](../Cargo.toml) and the compatibility table in [`README.md`](../README.md).
-      - Please ensure that [`Cargo.lock`](../../Cargo.lock) also updates!
+4. Remove the `-dev` suffix from the version in [`Cargo.toml`](../../Cargo.toml) and the compatibility table in [`README.md`](../../README.md).
+      - Please ensure that [`Cargo.lock`](../../../Cargo.lock) also updates!
 6. Commit all of these changes and open a pull request.
 7. Merge the PR once a core Bevy maintainer approves it with no outstanding issues from other contributors.
       - This starts the release process, enacting a freeze on all other changes until the release has finished. While maintainers need to be aware of this so they do not merge PRs during this time, the release process should take less than an hour, so it's unlikely to ever be an issue.
@@ -53,7 +53,7 @@ rustup run nightly-YYYY-MM-DD cargo install \
 
 ## Post-Release
 
-1. Add a new unreleased section to the top of the [changelog](../CHANGELOG.md) from the following template:
+1. Add a new unreleased section to the top of the [changelog](../../CHANGELOG.md) from the following template:
 
 ```markdown
 ## [Unreleased]
@@ -63,7 +63,7 @@ rustup run nightly-YYYY-MM-DD cargo install \
 **All Changes**: [`lint-vX.Y.Z...main`](https://github.com/TheBevyFlock/bevy_cli/compare/lint-vX.Y.Z...main)
 ```
 
-2. Bump the version in [`Cargo.toml`](../Cargo.toml) to the next `-dev` version, and ensure [`Cargo.lock`](../../Cargo.lock) also updates.
-3. Add a new row to the compatibility table for the new `-dev` version in [`README.md`](../README.md).
+2. Bump the version in [`Cargo.toml`](../../Cargo.toml) to the next `-dev` version, and ensure [`Cargo.lock`](../../../Cargo.lock) also updates.
+3. Add a new row to the compatibility table for the new `-dev` version in [`README.md`](../../README.md).
 4. Commit all of these changes and open a pull request.
 5. Merge the PR after it has been approved, unblocking frozen pull requests.

@@ -154,7 +154,7 @@ There are several other ways to toggle lints, but they have varying levels of su
 
 |`bevy_lint` Version|Rust Version|Rustup Toolchain|Bevy Version|
 |-|-|-|-|
-|0.2.0-dev|1.84.0|`nightly-2024-11-14`|0.14|
+|0.2.0-dev|1.84.0|`nightly-2024-11-28`|0.14|
 |0.1.0|1.84.0|`nightly-2024-11-14`|0.14|
 
 The Rust version in the above table specifies what [version of the Rust language](https://github.com/rust-lang/rust/releases) can be compiled with `bevy_lint`. Code written for a later version of Rust may not compile. (This is not usually an issue, though, because `bevy_lint`'s Rust version is kept 1 to 2 releases ahead of stable Rust.)

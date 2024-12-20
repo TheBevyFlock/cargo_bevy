@@ -1,0 +1,20 @@
+error: parameter takes `&mut MutUntyped` instead of a re-borrowed `MutUntyped`
+  --> tests/ui/borrowed_reborrowable/mut_untyped.rs:18:22
+   |
+18 | fn mutable_reference(_param: &mut MutUntyped) {
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^ help: use `MutUntyped` instead: `mut _param: bevy::bevy_ecs::change_detection::MutUntyped<'_>`
+   |
+note: the lint level is defined here
+  --> tests/ui/borrowed_reborrowable/mut_untyped.rs:5:9
+   |
+5  | #![deny(bevy::borrowed_reborrowable)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: parameter takes `&mut MutUntyped` instead of a re-borrowed `MutUntyped`
+  --> tests/ui/borrowed_reborrowable/mut_untyped.rs:24:33
+   |
+24 | fn mutable_reference_return<'a>(_param: &'a mut MutUntyped) -> usize {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use `MutUntyped` instead: `mut _param: bevy::bevy_ecs::change_detection::MutUntyped<'_>`
+
+error: aborting due to 2 previous errors
+
