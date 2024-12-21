@@ -33,6 +33,11 @@ clippy_utils = "=0.1.85"
 # Easy error propagation and contexts.
 anyhow = "1.0.86"
 
+# Parse `Cargo.toml` for lint configuration.
+toml_edit = { version = "0.22.22", default-features = false, features = [
+    "parse",
+] }
+
 [build-dependencies]
 # Parse `rust-toolchain.toml` at build time.
 toml_edit = { version = "0.22.22", default-features = false, features = [

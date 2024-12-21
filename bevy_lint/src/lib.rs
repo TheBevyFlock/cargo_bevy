@@ -26,6 +26,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 
 mod callback;
+mod config;
 pub mod groups;
 mod lint;
 pub mod lints;

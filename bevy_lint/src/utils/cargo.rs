@@ -4,7 +4,7 @@
 
 use std::{
     io,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
     str,
 };
@@ -12,14 +12,14 @@ use std::{
 /// The name of the `cargo` executable.
 const CARGO: &str = "cargo";
 
-/// Locates the path to `Cargo.toml` from the current working directory.
+/// Locates the path to `Cargo.toml` from a path within a Cargo project.
 ///
 /// This is a wrapper over [`cargo locate-project`]. By default it finds the `Cargo.toml` for the
 /// current crate, but when `workspace` is true will find the `Cargo.toml` for the current
 /// workspace.
 ///
 /// [`cargo locate-project`]: https://doc.rust-lang.org/cargo/commands/cargo-locate-project.html
-pub fn locate_project(workspace: bool) -> io::Result<PathBuf> {
+pub fn locate_project(relative_to: &Path, workspace: bool) -> io::Result<PathBuf> {
     let mut command = Command::new(CARGO);
 
     command
@@ -28,6 +28,14 @@ pub fn locate_project(workspace: bool) -> io::Result<PathBuf> {
         .arg("--message-format=plain")
         // If there is an error, display it directly to the user instead of capturing it.
         .stderr(Stdio::inherit());
+
+    // If `relative_to` is a folder, set that as the working directory for the command. Else, if it
+    // is a file, find the folder that it is contained in and use that instead.
+    if relative_to.is_dir() {
+        command.current_dir(relative_to);
+    } else {
+        command.current_dir(relative_to.parent().unwrap());
+    }
 
     if workspace {
         command.arg("--workspace");
