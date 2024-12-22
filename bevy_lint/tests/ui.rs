@@ -4,26 +4,60 @@
 
 use serde::Deserialize;
 use std::{
-    env,
+    env::{self},
     ffi::OsStr,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 use ui_test::{
     color_eyre::{self, eyre::ensure},
-    run_tests, CommandBuilder, Config,
+    run_tests, status_emitter, CommandBuilder, Config,
 };
 
 // This is set by `build.rs`. It is the version specified in `rust-toolchain.toml`.
 const RUST_TOOLCHAIN_CHANNEL: &str = env!("RUST_TOOLCHAIN_CHANNEL");
 
-fn main() -> color_eyre::Result<()> {
-    let config = config()?;
-    run_tests(config)
+fn main() {
+    run_ui();
+    run_ui_cargo();
+}
+
+fn run_ui() {
+    let config = base_config("ui").unwrap();
+    run_tests(config).unwrap();
+}
+
+fn run_ui_cargo() {
+    let mut config = Config {
+        host: Some(String::new()),
+        program: CommandBuilder {
+            program: "bevy_lint".into(),
+            args: vec!["--quiet".into()],
+            out_dir_flag: None,
+            input_file_flag: None,
+            envs: Vec::new(),
+            cfg_flag: None,
+        },
+        ..Config::rustc(Path::new("tests").join("ui-cargo"))
+    };
+
+    config.program.input_file_flag = CommandBuilder::cargo().input_file_flag;
+    config.comment_defaults.base().custom.clear();
+
+    ui_test::run_tests_generic(
+        vec![config],
+        |path, config| {
+            path.ends_with("Cargo.toml")
+                .then(|| ui_test::default_any_file_filter(path, config))
+        },
+        |_config, _file_contents| {},
+        status_emitter::Text::from(ui_test::Format::Pretty),
+    )
+    .unwrap();
 }
 
 /// Generates a custom [`Config`] for `bevy_lint`'s UI tests.
-fn config() -> color_eyre::Result<Config> {
+fn base_config(test_dir: &str) -> color_eyre::Result<Config> {
     const DRIVER_STEM: &str = "../target/debug/bevy_lint_driver";
 
     // The path to the `bevy_lint_driver` executable, relative from inside the `bevy_lint` folder.
@@ -67,7 +101,7 @@ fn config() -> color_eyre::Result<Config> {
             cfg_flag: Some("--print=cfg".into()),
         },
         out_dir: PathBuf::from("../target/ui"),
-        ..Config::rustc("tests/ui")
+        ..Config::rustc(Path::new("tests").join(test_dir))
     };
 
     Ok(config)
