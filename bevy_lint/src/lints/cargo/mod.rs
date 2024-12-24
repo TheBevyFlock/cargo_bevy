@@ -21,6 +21,7 @@ impl_lint_pass!(Cargo => [
 ]);
 
 pub struct Cargo {
+    /// A cached [`Symbol`] representing the interned string `"bevy"`.
     bevy_symbol: Symbol,
 }
 

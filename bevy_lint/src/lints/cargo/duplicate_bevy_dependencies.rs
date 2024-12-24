@@ -4,6 +4,39 @@
 //!
 //! When different third party crates use incompatible versions of Bevy, it can lead to confusing
 //! errors and type incompatibilities.
+//!
+//! # Example
+//! ```toml
+//! [package]
+//! name = "multiple-bevy-versions"
+//! version = "0.1.0"
+//! publish = false
+//! edition = "2021"
+//!
+//! [workspace]
+//!
+//! [dependencies]
+//! bevy = { version = "0.14.2" }
+//! leafwing-input-manager = "0.13"
+//! ```
+//! Lint output:
+//! ```
+//! error: Mismatching versions of `bevy` found
+//!   --> Cargo.toml:11:26
+//!    |
+//! 11 | leafwing-input-manager = "0.13"
+//!    |                          ^^^^^^
+//!    |
+//! help: Expected all crates to use `bevy` 0.14.2
+//!   --> Cargo.toml:10:8
+//!    |
+//! 10 | bevy = { version = "0.14.2" }
+//!    |        ^^^^^^^^^^^^^^^^^^^^^^
+//!    = note: `#[deny(bevy::duplicate_bevy_dependencies)]` on by default
+//!
+//! error: could not compile `multiple-bevy-versions` (bin "multiple-bevy-versions") due to 1 previous error
+//! Check failed: exit status: 101.
+//! ```
 
 use std::{collections::HashMap, path::Path, str::FromStr, sync::Arc};
 
@@ -27,12 +60,17 @@ pub(super) fn check(cx: &LateContext<'_>, metadata: &Metadata, bevy_symbol: Symb
         return;
     }
 
+    // Load the `Cargo.toml` into the `SourceMap` this is  necessary to get the `Span` of the
+    // `Cargo.toml` file.
     if let Ok(file) = cx.tcx.sess.source_map().load_file(Path::new("Cargo.toml"))
         && let Some(src) = file.src.as_deref()
+        // Parse the `Cargo.toml` file into a `CargoToml` struct, this helps getting the correct span and not just
+        // the root span of the `Cargo.toml` file.
         && let Ok(cargo_toml) = toml::from_str::<CargoToml>(src)
     {
         let local_name = cx.tcx.crate_name(LOCAL_CRATE);
 
+        // get the package name and the corresponding version of `bevy` that they depend on
         let mut bevy_dependents = HashMap::new();
         for package in &metadata.packages {
             for dependency in &package.dependencies {
@@ -44,10 +82,15 @@ pub(super) fn check(cx: &LateContext<'_>, metadata: &Metadata, bevy_symbol: Symb
             }
         }
 
+        // If there is a direct dependency on `bevy` use this as the target version for all other
+        // crates and lint all the dependents that require a different version.
+        // otherwise check if the resolved dependencies have more than one version of `bevy` and
+        // lint a single error if that is the case.
         match cargo_toml.dependencies.get("bevy") {
             Some(bevy_cargo) => {
                 lint_with_target_version(cx, &cargo_toml, &file, bevy_cargo, &bevy_dependents);
             }
+
             None => {
                 if let Some(resolve) = &metadata.resolve {
                     minimal_lint(cx, &bevy_dependents, resolve);
