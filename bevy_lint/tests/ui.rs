@@ -16,6 +16,7 @@ use ui_test::{
 
 // This is set by `build.rs`. It is the version specified in `rust-toolchain.toml`.
 const RUST_TOOLCHAIN_CHANNEL: &str = env!("RUST_TOOLCHAIN_CHANNEL");
+const DRIVER_STEM: &str = "../target/debug/bevy_lint_driver";
 
 fn main() {
     run_ui();
@@ -30,18 +31,35 @@ fn run_ui() {
 fn run_ui_cargo() {
     let mut config = Config {
         host: Some(String::new()),
-        program: CommandBuilder {
-            program: "bevy_lint".into(),
-            args: vec!["--quiet".into()],
-            out_dir_flag: None,
-            input_file_flag: None,
-            envs: Vec::new(),
-            cfg_flag: None,
-        },
+        target: None,
+        out_dir: PathBuf::from("../target/ui"),
         ..Config::rustc(Path::new("tests").join("ui-cargo"))
     };
 
+    let defaults = config.comment_defaults.base();
+    defaults.exit_status = None.into();
+    defaults.require_annotations = None.into();
+
     config.program.input_file_flag = CommandBuilder::cargo().input_file_flag;
+    config.program.out_dir_flag = CommandBuilder::cargo().out_dir_flag;
+    config.program.args = vec!["--quiet".into()];
+
+    let current_exe_path = env::current_exe().unwrap();
+    let deps_path = current_exe_path.parent().unwrap();
+    let profile_path = deps_path.parent().unwrap();
+
+    config.program.program = profile_path.join(if cfg!(windows) {
+        "bevy_lint_driver.exe"
+    } else {
+        "bevy_lint_driver"
+    });
+
+    config.program.program.set_file_name(if cfg!(windows) {
+        "bevy_lint.exe"
+    } else {
+        "bevy_lint"
+    });
+
     config.comment_defaults.base().custom.clear();
 
     ui_test::run_tests_generic(
@@ -58,8 +76,6 @@ fn run_ui_cargo() {
 
 /// Generates a custom [`Config`] for `bevy_lint`'s UI tests.
 fn base_config(test_dir: &str) -> color_eyre::Result<Config> {
-    const DRIVER_STEM: &str = "../target/debug/bevy_lint_driver";
-
     // The path to the `bevy_lint_driver` executable, relative from inside the `bevy_lint` folder.
     // We use `with_extension()` to potentially add the `.exe` suffix, if on Windows.
     let driver_path = Path::new(DRIVER_STEM).with_extension(env::consts::EXE_EXTENSION);
