@@ -28,26 +28,33 @@ fn run_ui() {
     run_tests(config).unwrap();
 }
 
+/// This [`Config`] will run the `bevy_lint` command for all paths that end in `Cargo.toml`
+/// # Example:
+/// ```bash
+/// bevy_lint" "--quiet" "--target-dir"
+/// "../target/ui/0/tests/ui-cargo/duplicate_bevy_dependencies/fail" "--manifest-path"
+/// "tests/ui-cargo/duplicate_bevy_dependencies/fail/Cargo.toml"```
 fn run_ui_cargo() {
-    let mut config = Config {
-        host: Some(String::new()),
-        target: None,
-        out_dir: PathBuf::from("../target/ui"),
-        ..Config::rustc(Path::new("tests").join("ui-cargo"))
-    };
+    let mut config = base_config("ui-cargo").unwrap();
 
     let defaults = config.comment_defaults.base();
+    // The driver returns a '101' on error.
+    // This allows for any status code to be considered a success.
     defaults.exit_status = None.into();
+
     defaults.require_annotations = None.into();
 
+    // This sets the '--manifest-path' flag
     config.program.input_file_flag = CommandBuilder::cargo().input_file_flag;
     config.program.out_dir_flag = CommandBuilder::cargo().out_dir_flag;
+    // Do not print cargo log messages
     config.program.args = vec!["--quiet".into()];
 
     let current_exe_path = env::current_exe().unwrap();
     let deps_path = current_exe_path.parent().unwrap();
     let profile_path = deps_path.parent().unwrap();
 
+    // Specify the binary to use when executing tests with this `Config`
     config.program.program = profile_path.join(if cfg!(windows) {
         "bevy_lint_driver.exe"
     } else {
@@ -60,8 +67,11 @@ fn run_ui_cargo() {
         "bevy_lint"
     });
 
+    // this clears the default `--edition` flag
     config.comment_defaults.base().custom.clear();
 
+    // Run this `Config` for all paths that end with `Cargo.toml` resulting
+    // only in the `Cargo` lints.
     ui_test::run_tests_generic(
         vec![config],
         |path, config| {
