@@ -6,6 +6,7 @@
 //! errors and type incompatibilities.
 //!
 //! # Example
+//!
 //! ```toml
 //! [package]
 //! name = "multiple-bevy-versions"
@@ -19,8 +20,8 @@
 //! bevy = { version = "0.14.2" }
 //! leafwing-input-manager = "0.13"
 //! ```
+//!
 //! Lint output:
-//! ```
 //! error: Mismatching versions of `bevy` found
 //!   --> Cargo.toml:11:26
 //!    |
@@ -34,9 +35,8 @@
 //!    |        ^^^^^^^^^^^^^^^^^^^^^^
 //!    = note: `#[deny(bevy::duplicate_bevy_dependencies)]` on by default
 //!
-//! error: could not compile `multiple-bevy-versions` (bin "multiple-bevy-versions") due to 1 previous error
-//! Check failed: exit status: 101.
-//! ```
+//! error: could not compile `multiple-bevy-versions` (bin "multiple-bevy-versions") due to 1
+//! previous error Check failed: exit status: 101.
 
 use std::{collections::HashMap, path::Path, str::FromStr, sync::Arc};
 
