@@ -42,7 +42,7 @@ use std::{collections::HashMap, path::Path, str::FromStr, sync::Arc};
 
 use crate::lints::cargo::{toml_span, CargoToml, DUPLICATE_BEVY_DEPENDENCIES};
 use cargo_metadata::{
-    semver::{Error, Version, VersionReq},
+    semver::{Version, VersionReq},
     Metadata, Resolve,
 };
 use clippy_utils::{
@@ -107,7 +107,14 @@ fn lint_with_target_version(
     bevy_cargo: &Spanned<toml::Value>,
     bevy_dependents: &HashMap<&str, VersionReq>,
 ) {
-    let target_version = get_version_from_toml(bevy_cargo.as_ref()).unwrap();
+    // Semver only supports checking if a given `VersionReq` matches a `Version` and not if two
+    // `VersionReq` can successfully resolve to one `Version`. Therefore we try to parse the
+    // `Version` from the `bevy` dependency in the `Cargo.toml` file. This only works if a
+    // single version  of `bevy` is specified and not a range.
+    let Ok(target_version) = get_version_from_toml(bevy_cargo.as_ref()) else {
+        return;
+    };
+
     let bevy_cargo_toml_span = toml_span(bevy_cargo.span(), file);
 
     let mismatching_dependencies = bevy_dependents
@@ -137,17 +144,19 @@ fn minimal_lint(
     bevy_dependents: &HashMap<&str, VersionReq>,
     resolved: &Resolve,
 ) {
-    let mut dependencies = resolved
+    // Examples of the underlying string representation of resolved crates
+    // "id": "file:///path/to/my-package#0.1.0",
+    // "id": "registry+https://github.com/rust-lang/crates.io-index#bevy@0.9.1",
+    let mut resolved_bevy_versions: Vec<&str> = resolved
         .nodes
         .iter()
         .filter_map(|node| {
-            // "id": "file:///path/to/my-package#0.1.0",
-            // "id": "registry+https://github.com/rust-lang/crates.io-index#bevy@0.9.1",
-            // "id": "registry+https://github.com/rust-lang/crates.io-index#regex@1.11.1",
+            // Extract version from local crates
             if node.id.repr.starts_with("file:///") {
-                todo!()
+                return node.id.repr.split('#').nth(1).map(|version| vec![version]);
             }
-            if let Some((id, _version)) = node.id.repr.split_once('@') {
+            // Extract versions from external crates
+            if let Some((id, _)) = node.id.repr.split_once('@') {
                 if bevy_dependents
                     .keys()
                     .any(|crate_name| id.ends_with(crate_name))
@@ -155,30 +164,24 @@ fn minimal_lint(
                     return Some(
                         node.dependencies
                             .iter()
-                            .filter_map(|dep| {
-                                if dep.repr.contains("bevy@") {
-                                    return Some(
-                                        dep.repr
-                                            .split('@')
-                                            .nth(1)
-                                            .expect("resolved crate to contain <url>@<version>"),
-                                    );
-                                }
-                                None
+                            .filter_map(|dep| dep.repr.split_once('@'))
+                            .filter_map(|(name, version)| {
+                                (name.contains("bevy")).then_some(version)
                             })
-                            .collect::<Vec<&str>>(),
+                            .collect(),
                     );
                 }
             }
+
             None
         })
         .flatten()
-        .collect::<Vec<&str>>();
+        .collect();
 
-    dependencies.sort_unstable();
-    dependencies.dedup();
+    resolved_bevy_versions.sort_unstable();
+    resolved_bevy_versions.dedup();
 
-    if dependencies.len() > 1 {
+    if resolved_bevy_versions.len() > 1 {
         span_lint(
             cx,
             DUPLICATE_BEVY_DEPENDENCIES.lint,
@@ -188,18 +191,23 @@ fn minimal_lint(
     }
 }
 
-fn get_version_from_toml(table: &toml::Value) -> Result<Version, Error> {
-    // TODO: make this more robust, this fails if someone uses version ranges for bevy
+/// Extracts the `version` field from a [`toml::Value`] and parses it into a [`Version`]
+/// There are two possible formats:
+/// 1. A toml-string `<crate> = <version>`
+/// 2. A toml-table `<crate> = { version = <version> , ... }`
+///
+/// Cargo supports specifying version ranges,
+/// but [`Version::from_str`] can only parse exact  versions and not ranges.
+fn get_version_from_toml(table: &toml::Value) -> anyhow::Result<Version> {
     match table {
-        toml::Value::String(version) => Version::from_str(version.as_str()),
-        toml::Value::Table(map) => {
-            let version = map.get("version").expect("version field is required");
-            Version::from_str(
-                version
-                    .as_str()
-                    .expect("version field is required to be a string"),
-            )
-        }
-        _ => panic!("impossible to hit"),
+        toml::Value::String(version) => Version::from_str(version).map_err(anyhow::Error::from),
+        toml::Value::Table(table) => table
+            .get("version")
+            .and_then(toml::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("The 'version' field is required."))
+            .and_then(|version| Version::from_str(version).map_err(anyhow::Error::from)),
+        _ => Err(anyhow::anyhow!(
+            "Unexpected TOML format: expected a toml-string '<crate> = <version>' or a toml-table with '<crate> = {{ version = <version> }} '"
+        )),
     }
 }
