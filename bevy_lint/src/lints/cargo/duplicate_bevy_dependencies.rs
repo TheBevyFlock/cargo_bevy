@@ -82,10 +82,10 @@ pub(super) fn check(cx: &LateContext<'_>, metadata: &Metadata, bevy_symbol: Symb
             }
         }
 
-        // If there is a direct dependency on `bevy` use this as the target version for all other
-        // crates and lint all the dependents that require a different version.
-        // otherwise check if the resolved dependencies have more than one version of `bevy` and
-        // lint a single error if that is the case.
+        // If `bevy` is listed as a direct dependency, use its version as the target version for all
+        // other crates, and check for any dependents that use a different version.
+        // If `bevy` is not listed as a direct dependency, check if multiple versions of `bevy` are
+        // resolved. If so, report a single lint error.
         match cargo_toml.dependencies.get("bevy") {
             Some(bevy_cargo) => {
                 lint_with_target_version(cx, &cargo_toml, &file, bevy_cargo, &bevy_dependents);
