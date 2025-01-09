@@ -49,5 +49,6 @@ pub fn locate_project(relative_to: &Path, workspace: bool) -> io::Result<PathBuf
     let path = str::from_utf8(&output.stdout)
         .map_err(|utf_error| io::Error::new(io::ErrorKind::InvalidData, utf_error))?;
 
-    Ok(PathBuf::from(path))
+    // `path` contains a trailing newline `\n`, which we trim to make the path valid.
+    Ok(PathBuf::from(path.trim_end()))
 }
