@@ -1,5 +1,3 @@
-use std::sync::Once;
-
 use rustc_driver::Callbacks;
 use rustc_interface::interface::Config;
 use rustc_lint_defs::RegisteredTools;
@@ -10,7 +8,7 @@ use rustc_span::symbol::Ident;
 ///
 /// Because we overwrite `registered_tools()` with our own version, we save the original in this
 /// static so it can be called later.
-static mut REGISTERED_TOOLS: fn(TyCtxt<'_>, ()) -> RegisteredTools = |_, _| {
+static mut ORIGINAL_REGISTERED_TOOLS: fn(TyCtxt<'_>, ()) -> RegisteredTools = |_, _| {
     unreachable!("This function will be overwritten when `BevyLintCallback::config()` is run.")
 };
 
@@ -44,15 +42,14 @@ impl Callbacks for BevyLintCallback {
         );
 
         config.override_queries = Some(|_session, providers| {
-            static INIT: Once = Once::new();
-
+            // Save the original `registered_tools()` query so that our new version can still call
+            // it.
+            //
             // SAFETY: `REGISTERED_TOOLS` is only written to here, and is not read by our custom
             // `registered_tools()` until later in the program.
-            INIT.call_once(|| unsafe {
-                // Save the original `registered_tools()` query so that our new version can still
-                // call it.
-                REGISTERED_TOOLS = providers.queries.registered_tools;
-            });
+            unsafe {
+                ORIGINAL_REGISTERED_TOOLS = providers.queries.registered_tools;
+            }
 
             // Overwrite the `registered_tools()` query with our own version.
             providers.queries.registered_tools = registered_tools;
@@ -60,11 +57,12 @@ impl Callbacks for BevyLintCallback {
     }
 }
 
-/// A version of the `registered_tools()` compiler query that also includes `bevy` by default.
+/// A version of the `registered_tools()` compiler query that also includes `bevy` as a default
+/// tool.
 fn registered_tools(tcx: TyCtxt<'_>, _: ()) -> RegisteredTools {
     // SAFETY: `REGISTERED_TOOLS` is not modified after it is first set in
     // `BevyLintCallback::config()`. Queries are not run until after that function finishes.
-    let mut tools = unsafe { REGISTERED_TOOLS(tcx, ()) };
+    let mut tools = unsafe { ORIGINAL_REGISTERED_TOOLS(tcx, ()) };
 
     tools.insert(Ident::from_str("bevy"));
 
