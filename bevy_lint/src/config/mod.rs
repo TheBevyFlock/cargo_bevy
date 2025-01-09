@@ -3,25 +3,24 @@ use std::{collections::BTreeMap, sync::RwLock};
 use rustc_interface::Config;
 use rustc_lint::Level;
 use rustc_session::{config::Input, utils::was_invoked_from_cargo};
-use rustc_span::Symbol;
-use toml_edit::{DocumentMut, Item, Table, Value};
+use toml_edit::{DocumentMut, InlineTable, Item, Table, Value};
 
 use crate::utils;
 
 /// The global lint configuration for the crate currently being compiled.
-static LINT_CONFIG: RwLock<BTreeMap<Symbol, Item>> = RwLock::new(BTreeMap::new());
+static LINT_CONFIG: RwLock<BTreeMap<String, InlineTable>> = RwLock::new(BTreeMap::new());
 
-// pub fn with_config<F, R>(name: Symbol, func: F) -> R
-// where
-//     F: FnOnce(&Item) -> R,
-// {
-//     let config_map = LINT_CONFIG.read().unwrap();
+pub fn with_config<F, R>(name: &str, func: F) -> R
+where
+    F: FnOnce(&InlineTable) -> R,
+{
+    let config_map = LINT_CONFIG.read().unwrap();
 
-//     match config_map.get(&name) {
-//         Some(config) => (func)(config),
-//         None => (func)(&Item::None),
-//     }
-// }
+    match config_map.get(name) {
+        Some(config) => (func)(config),
+        None => (func)(&InlineTable::new()),
+    }
+}
 
 pub fn load_config(compiler_config: &mut Config) {
     // Lock the global linter configuration and get a mutable reference to it.
@@ -55,6 +54,18 @@ pub fn load_config(compiler_config: &mut Config) {
     // Modify the compiler CLI arguments to include `--warn LINT`, `--allow LINT`, etc. for all
     // lint level configuration.
     append_lint_levels_to_options(compiler_config, linter_config);
+
+    for (k, v) in linter_config {
+        if let Item::Value(Value::InlineTable(inline_table)) = v {
+            let mut extra_config = inline_table.clone();
+
+            extra_config.remove("level");
+
+            if !extra_config.is_empty() {
+                lint_config.insert(k.into(), extra_config);
+            }
+        }
+    }
 }
 
 /// Finds the `Cargo.toml` that `rustc` is most likely compiling for, and parses it into a
