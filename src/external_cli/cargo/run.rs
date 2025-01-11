@@ -15,6 +15,14 @@ pub(crate) fn command() -> Command {
 
 #[derive(Debug, Args)]
 pub struct CargoRunArgs {
+    /// Override a configuration value.
+    ///
+    /// The argument should be in TOML syntax of KEY=VALUE,
+    /// or provided as a path to an extra configuration file.
+    /// This flag may be specified multiple times.
+    #[clap(long = "config", value_name = "KEY=VALUE|PATH")]
+    pub config: Vec<String>,
+
     #[clap(flatten)]
     pub package_args: CargoPackageRunArgs,
     #[clap(flatten)]
@@ -35,6 +43,7 @@ impl CargoRunArgs {
             .append(self.feature_args.args_builder())
             .append(self.compilation_args.args_builder(is_web))
             .append(self.manifest_args.args_builder())
+            .add_values_separately("--config", self.config.iter())
     }
 }
 

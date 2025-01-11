@@ -83,7 +83,7 @@ impl ArgBuilder {
         }
     }
 
-    /// Add an argument with multiple values.
+    /// Add an argument with multiple values, separated by commas.
     ///
     /// # Example
     ///
@@ -105,6 +105,33 @@ impl ArgBuilder {
         } else {
             self.add_with_value(name, values.join(","))
         }
+    }
+
+    /// Add an argument with multiple values, reusing the same argument name.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bevy_cli::external_cli::arg_builder::ArgBuilder;
+    /// let features = ["dev", "file_watcher"];
+    /// ArgBuilder::new().add_values_separately("--features", features);
+    /// ```
+    pub fn add_values_separately<N, V>(
+        mut self,
+        name: N,
+        value_list: impl IntoIterator<Item = V>,
+    ) -> Self
+    where
+        N: Into<String>,
+        V: Into<String>,
+    {
+        let arg: String = name.into();
+
+        for value in value_list.into_iter() {
+            self = self.add_with_value(&arg, value);
+        }
+
+        self
     }
 
     /// Add all arguments from the other builder to this one.
