@@ -1,0 +1,20 @@
+error: Expression returns `unit` and results in an empty component insertion
+  --> tests/ui/unit_component_insertion/main.rs:16:64
+   |
+16 |         Transform::from_translation(Vec3::new(0.75, 0.0, 0.0)).rotate_z(PI / 4.0),
+   |                                                                ^^^^^^^^
+   |
+note: the lint level is defined here
+  --> tests/ui/unit_component_insertion/main.rs:3:9
+   |
+3  | #![deny(bevy::unit_component_insertion)]
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: Expression returns `unit` and results in an empty component insertion
+  --> tests/ui/unit_component_insertion/main.rs:18:9
+   |
+18 |         example()
+   |         ^^^^^^^
+
+error: aborting due to 2 previous errors
+

@@ -13,11 +13,13 @@ pub mod main_return_without_appexit;
 pub mod missing_reflect;
 pub mod panicking_methods;
 pub mod plugin_not_ending_in_plugin;
+pub mod unit_component_insertion;
 pub mod zst_query;
 
 pub(crate) static LINTS: &[&BevyLint] = &[
     borrowed_reborrowable::BORROWED_REBORROWABLE,
     insert_event_resource::INSERT_EVENT_RESOURCE,
+    unit_component_insertion::UNIT_COMPONENT_INSERTION,
     main_return_without_appexit::MAIN_RETURN_WITHOUT_APPEXIT,
     panicking_methods::PANICKING_QUERY_METHODS,
     missing_reflect::MISSING_REFLECT,
@@ -39,4 +41,7 @@ pub(crate) fn register_passes(store: &mut LintStore) {
     store.register_late_pass(|_| Box::new(panicking_methods::PanickingMethods));
     store.register_late_pass(|_| Box::new(plugin_not_ending_in_plugin::PluginNotEndingInPlugin));
     store.register_late_pass(|_| Box::new(zst_query::ZstQuery));
+    store.register_late_pass(|_| {
+        Box::new(unit_component_insertion::UnitComponentInsertion::default())
+    });
 }
