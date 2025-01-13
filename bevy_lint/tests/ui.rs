@@ -4,28 +4,88 @@
 
 use serde::Deserialize;
 use std::{
-    env,
+    env::{self},
     ffi::OsStr,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 use ui_test::{
     color_eyre::{self, eyre::ensure},
-    run_tests, CommandBuilder, Config,
+    run_tests, status_emitter, CommandBuilder, Config,
 };
 
 // This is set by `build.rs`. It is the version specified in `rust-toolchain.toml`.
 const RUST_TOOLCHAIN_CHANNEL: &str = env!("RUST_TOOLCHAIN_CHANNEL");
+const DRIVER_STEM: &str = "../target/debug/bevy_lint_driver";
 
-fn main() -> color_eyre::Result<()> {
-    let config = config()?;
-    run_tests(config)
+fn main() {
+    run_ui();
+    run_ui_cargo();
+}
+
+fn run_ui() {
+    let config = base_config("ui").unwrap();
+    run_tests(config).unwrap();
+}
+
+/// This [`Config`] will run the `bevy_lint` command for all paths that end in `Cargo.toml`
+/// # Example:
+/// ```bash
+/// bevy_lint" "--quiet" "--target-dir"
+/// "../target/ui/0/tests/ui-cargo/duplicate_bevy_dependencies/fail" "--manifest-path"
+/// "tests/ui-cargo/duplicate_bevy_dependencies/fail/Cargo.toml"```
+fn run_ui_cargo() {
+    let mut config = base_config("ui-cargo").unwrap();
+
+    let defaults = config.comment_defaults.base();
+    // The driver returns a '101' on error.
+    // This allows for any status code to be considered a success.
+    defaults.exit_status = None.into();
+
+    defaults.require_annotations = None.into();
+
+    // This sets the '--manifest-path' flag
+    config.program.input_file_flag = CommandBuilder::cargo().input_file_flag;
+    config.program.out_dir_flag = CommandBuilder::cargo().out_dir_flag;
+    // Do not print cargo log messages
+    config.program.args = vec!["--quiet".into()];
+
+    let current_exe_path = env::current_exe().unwrap();
+    let deps_path = current_exe_path.parent().unwrap();
+    let profile_path = deps_path.parent().unwrap();
+
+    // Specify the binary to use when executing tests with this `Config`
+    config.program.program = profile_path.join(if cfg!(windows) {
+        "bevy_lint_driver.exe"
+    } else {
+        "bevy_lint_driver"
+    });
+
+    config.program.program.set_file_name(if cfg!(windows) {
+        "bevy_lint.exe"
+    } else {
+        "bevy_lint"
+    });
+
+    // this clears the default `--edition` flag
+    config.comment_defaults.base().custom.clear();
+
+    // Run this `Config` for all paths that end with `Cargo.toml` resulting
+    // only in the `Cargo` lints.
+    ui_test::run_tests_generic(
+        vec![config],
+        |path, config| {
+            path.ends_with("Cargo.toml")
+                .then(|| ui_test::default_any_file_filter(path, config))
+        },
+        |_config, _file_contents| {},
+        status_emitter::Text::from(ui_test::Format::Pretty),
+    )
+    .unwrap();
 }
 
 /// Generates a custom [`Config`] for `bevy_lint`'s UI tests.
-fn config() -> color_eyre::Result<Config> {
-    const DRIVER_STEM: &str = "../target/debug/bevy_lint_driver";
-
+fn base_config(test_dir: &str) -> color_eyre::Result<Config> {
     // The path to the `bevy_lint_driver` executable, relative from inside the `bevy_lint` folder.
     // We use `with_extension()` to potentially add the `.exe` suffix, if on Windows.
     let driver_path = Path::new(DRIVER_STEM).with_extension(env::consts::EXE_EXTENSION);
@@ -67,7 +127,7 @@ fn config() -> color_eyre::Result<Config> {
             cfg_flag: Some("--print=cfg".into()),
         },
         out_dir: PathBuf::from("../target/ui"),
-        ..Config::rustc("tests/ui")
+        ..Config::rustc(Path::new("tests").join(test_dir))
     };
 
     Ok(config)

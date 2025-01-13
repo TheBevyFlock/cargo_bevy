@@ -1,0 +1,11 @@
+[package]
+name = "multiple-bevy-versions"
+version = "0.1.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+bevy = { version = "0.14.2" }
+leafwing-input-manager = "0.14"
