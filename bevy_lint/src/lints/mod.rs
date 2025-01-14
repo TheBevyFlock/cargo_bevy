@@ -32,11 +32,15 @@ pub(crate) fn register_lints(store: &mut LintStore) {
 }
 
 pub(crate) fn register_passes(store: &mut LintStore) {
-    store.register_late_pass(|_| Box::new(borrowed_reborrowable::BorrowedReborrowable));
-    store.register_late_pass(|_| Box::new(insert_event_resource::InsertEventResource));
-    store.register_late_pass(|_| Box::new(main_return_without_appexit::MainReturnWithoutAppExit));
-    store.register_late_pass(|_| Box::new(missing_reflect::MissingReflect));
-    store.register_late_pass(|_| Box::new(panicking_methods::PanickingMethods));
-    store.register_late_pass(|_| Box::new(plugin_not_ending_in_plugin::PluginNotEndingInPlugin));
-    store.register_late_pass(|_| Box::new(zst_query::ZstQuery));
+    store.register_late_pass(|_| Box::new(borrowed_reborrowable::BorrowedReborrowable::default()));
+    store.register_late_pass(|_| Box::new(insert_event_resource::InsertEventResource::default()));
+    store.register_late_pass(|_| {
+        Box::new(main_return_without_appexit::MainReturnWithoutAppExit::default())
+    });
+    store.register_late_pass(|_| Box::new(missing_reflect::MissingReflect::default()));
+    store.register_late_pass(|_| Box::new(panicking_methods::PanickingMethods::default()));
+    store.register_late_pass(|_| {
+        Box::new(plugin_not_ending_in_plugin::PluginNotEndingInPlugin::default())
+    });
+    store.register_late_pass(|_| Box::new(zst_query::ZstQuery::default()));
 }

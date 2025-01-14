@@ -101,3 +101,53 @@ macro_rules! declare_bevy_lint {
         };
     };
 }
+
+/// Creates a new [`LintPass`](rustc_lint::LintPass).
+///
+/// This is based on [`declare_lint_pass!`](rustc_lint_defs::declare_lint_pass), but supports more
+/// options.
+///
+/// # Example
+///
+/// ```ignore
+/// declare_bevy_lint_pass! {
+///     // Declares which lints are emitted by this lint pass.
+///     pub LintPassName => [LINT_NAME.lint],
+///
+///     // The following are optional fields, and may be excluded.
+///     //
+///     // Declares fields of the lint pass that are set when `LintPassName::default()` is called.
+///     @default = {
+///         component: Symbol = Symbol::intern("component"),
+///     },
+/// }
+/// ```
+#[macro_export]
+#[doc(hidden)]
+macro_rules! declare_bevy_lint_pass {
+    (
+        $(#[$attr:meta])*
+        $vis:vis $name:ident => [$($lint:expr),* $(,)?],
+
+        $(
+            @default = {
+                $($default_field:ident: $default_ty:ty = $default_value:expr),* $(,)?
+            },
+        )?
+    ) => {
+        $(#[$attr])*
+        $vis struct $name {
+            $($($default_field: $default_ty),*)?
+        }
+
+        impl ::std::default::Default for $name {
+            fn default() -> Self {
+                Self {
+                    $($($default_field: $default_value),*)?
+                }
+            }
+        }
+
+        ::rustc_lint_defs::impl_lint_pass!($name => [$($lint),*]);
+    };
+}

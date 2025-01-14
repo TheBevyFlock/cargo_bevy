@@ -78,13 +78,12 @@
 
 use std::ops::ControlFlow;
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{diagnostics::span_lint_and_sugg, ty::match_type};
 use rustc_errors::Applicability;
 use rustc_hir::{intravisit::FnKind, Body, FnDecl, Mutability};
 use rustc_lint::{LateContext, LateLintPass};
 use rustc_middle::ty::{Interner, Ty, TyKind, TypeVisitable, TypeVisitor};
-use rustc_session::declare_lint_pass;
 use rustc_span::{
     def_id::LocalDefId,
     symbol::{kw, Ident},
@@ -97,8 +96,8 @@ declare_bevy_lint! {
     "parameter takes a mutable reference to a re-borrowable type",
 }
 
-declare_lint_pass! {
-    BorrowedReborrowable => [BORROWED_REBORROWABLE.lint]
+declare_bevy_lint_pass! {
+    pub BorrowedReborrowable => [BORROWED_REBORROWABLE.lint],
 }
 
 impl<'tcx> LateLintPass<'tcx> for BorrowedReborrowable {

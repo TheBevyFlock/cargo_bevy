@@ -30,7 +30,7 @@
 //! }
 //! ```
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{
     diagnostics::span_lint_hir_and_then, is_entrypoint_fn, sym, ty::match_type,
     visitors::for_each_expr,
@@ -40,8 +40,7 @@ use rustc_hir::{
     def_id::LocalDefId, intravisit::FnKind, Body, ExprKind, FnDecl, FnRetTy, Ty, TyKind,
 };
 use rustc_lint::{LateContext, LateLintPass};
-use rustc_session::declare_lint_pass;
-use rustc_span::Span;
+use rustc_span::{Span, Symbol};
 use std::ops::ControlFlow;
 
 declare_bevy_lint! {
@@ -50,8 +49,11 @@ declare_bevy_lint! {
     "an entrypoint that calls `App::run()` does not return `AppExit`",
 }
 
-declare_lint_pass! {
-    MainReturnWithoutAppExit => [MAIN_RETURN_WITHOUT_APPEXIT.lint]
+declare_bevy_lint_pass! {
+    pub MainReturnWithoutAppExit => [MAIN_RETURN_WITHOUT_APPEXIT.lint],
+    @default = {
+        run: Symbol = sym!(run),
+    },
 }
 
 impl<'tcx> LateLintPass<'tcx> for MainReturnWithoutAppExit {
@@ -81,7 +83,7 @@ impl<'tcx> LateLintPass<'tcx> for MainReturnWithoutAppExit {
             for_each_expr(cx, body, |expr| {
                 // Find a method call that matches `.run()`.
                 if let ExprKind::MethodCall(path, src, _, method_span) = expr.kind
-                    && path.ident.name == sym!(run)
+                    && path.ident.name == self.run
                 {
                     // Get the type of `src` for `src.run()`. We peel away all references because
                     // both `App` and `&mut App` are allowed.

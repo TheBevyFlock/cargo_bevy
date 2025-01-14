@@ -76,7 +76,7 @@
 //! # bevy::ecs::system::assert_is_system(graceful_world);
 //! ```
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{
     diagnostics::span_lint_and_help,
     source::{snippet, snippet_opt},
@@ -85,7 +85,6 @@ use clippy_utils::{
 use rustc_hir::{Expr, ExprKind, GenericArgs};
 use rustc_lint::{LateContext, LateLintPass, Lint};
 use rustc_middle::ty::Ty;
-use rustc_session::declare_lint_pass;
 use rustc_span::{Span, Symbol};
 
 declare_bevy_lint! {
@@ -100,8 +99,8 @@ declare_bevy_lint! {
     "called a `World` method that can panic when a non-panicking alternative exists",
 }
 
-declare_lint_pass! {
-    PanickingMethods => [PANICKING_QUERY_METHODS.lint, PANICKING_WORLD_METHODS.lint]
+declare_bevy_lint_pass! {
+    pub PanickingMethods => [PANICKING_QUERY_METHODS.lint, PANICKING_WORLD_METHODS.lint],
 }
 
 impl<'tcx> LateLintPass<'tcx> for PanickingMethods {

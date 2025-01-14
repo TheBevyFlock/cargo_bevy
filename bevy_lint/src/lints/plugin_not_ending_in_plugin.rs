@@ -37,12 +37,11 @@
 //! }
 //! ```
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{diagnostics::span_lint_hir_and_then, match_def_path, path_res};
 use rustc_errors::Applicability;
 use rustc_hir::{def::Res, HirId, Item, ItemKind, OwnerId};
 use rustc_lint::{LateContext, LateLintPass};
-use rustc_session::declare_lint_pass;
 use rustc_span::symbol::Ident;
 
 declare_bevy_lint! {
@@ -51,8 +50,8 @@ declare_bevy_lint! {
     "implemented `Plugin` for a structure whose name does not end in \"Plugin\"",
 }
 
-declare_lint_pass! {
-    PluginNotEndingInPlugin => [PLUGIN_NOT_ENDING_IN_PLUGIN.lint]
+declare_bevy_lint_pass! {
+    pub PluginNotEndingInPlugin => [PLUGIN_NOT_ENDING_IN_PLUGIN.lint],
 }
 
 impl<'tcx> LateLintPass<'tcx> for PluginNotEndingInPlugin {

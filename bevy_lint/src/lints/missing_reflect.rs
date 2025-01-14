@@ -31,7 +31,7 @@
 //! struct MyComponent;
 //! ```
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{def_path_res, diagnostics::span_lint_hir_and_then, sugg::DiagExt};
 use rustc_errors::Applicability;
 use rustc_hir::{
@@ -40,7 +40,6 @@ use rustc_hir::{
 };
 use rustc_lint::{LateContext, LateLintPass};
 use rustc_middle::ty::TyCtxt;
-use rustc_session::declare_lint_pass;
 use rustc_span::Span;
 
 declare_bevy_lint! {
@@ -51,8 +50,8 @@ declare_bevy_lint! {
     @crate_level_only = true,
 }
 
-declare_lint_pass! {
-    MissingReflect => [MISSING_REFLECT.lint]
+declare_bevy_lint_pass! {
+    pub MissingReflect => [MISSING_REFLECT.lint],
 }
 
 impl<'tcx> LateLintPass<'tcx> for MissingReflect {

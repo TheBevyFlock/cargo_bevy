@@ -35,7 +35,7 @@
 //! App::new().add_event::<MyEvent>().run();
 //! ```
 
-use crate::declare_bevy_lint;
+use crate::{declare_bevy_lint, declare_bevy_lint_pass};
 use clippy_utils::{
     diagnostics::span_lint_and_sugg, source::snippet_with_applicability, sym, ty::match_type,
 };
@@ -43,8 +43,7 @@ use rustc_errors::Applicability;
 use rustc_hir::{Expr, ExprKind, GenericArg, GenericArgs, Path, PathSegment, QPath};
 use rustc_lint::{LateContext, LateLintPass};
 use rustc_middle::ty::{Ty, TyKind};
-use rustc_session::declare_lint_pass;
-use rustc_span::Span;
+use rustc_span::{Span, Symbol};
 use std::borrow::Cow;
 
 declare_bevy_lint! {
@@ -53,8 +52,12 @@ declare_bevy_lint! {
     "called `App::insert_resource(Events<T>)` or `App::init_resource::<Events<T>>()` instead of `App::add_event::<T>()`",
 }
 
-declare_lint_pass! {
-    InsertEventResource => [INSERT_EVENT_RESOURCE.lint]
+declare_bevy_lint_pass! {
+    pub InsertEventResource => [INSERT_EVENT_RESOURCE.lint],
+    @default = {
+        insert_resource: Symbol = sym!(insert_resource),
+        init_resource: Symbol = sym!(init_resource),
+    },
 }
 
 impl<'tcx> LateLintPass<'tcx> for InsertEventResource {
@@ -73,10 +76,10 @@ impl<'tcx> LateLintPass<'tcx> for InsertEventResource {
             // If the method is `App::insert_resource()` or `App::init_resource()`, check it with
             // its corresponding function.
             match path.ident.name {
-                symbol if symbol == sym!(insert_resource) => {
+                symbol if symbol == self.insert_resource => {
                     check_insert_resource(cx, args, method_span)
                 }
-                symbol if symbol == sym!(init_resource) => {
+                symbol if symbol == self.init_resource => {
                     check_init_resource(cx, path, method_span)
                 }
                 _ => {}
