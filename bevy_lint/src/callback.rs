@@ -20,5 +20,14 @@ impl Callbacks for BevyLintCallback {
             crate::lints::register_passes(store);
             crate::groups::register_groups(store);
         }));
+
+        // Enable `rustc`'s internal lints when in debug mode.
+        //
+        // By setting `unstable_options = true`, we make `Session::enable_internal_lints()`
+        // evaluate to true. This, combined with the `#[warn(rustc::internal)]` at the crate root,
+        // enables `rustc`'s internal lints.
+        if cfg!(debug_assertions) {
+            config.opts.unstable_opts.unstable_options = true;
+        }
     }
 }
