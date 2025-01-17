@@ -1,0 +1,15 @@
+error: Mismatching versions of `bevy` found
+  --> Cargo.toml:11:26
+   |
+11 | leafwing-input-manager = "0.13"
+   |                          ^^^^^^
+   |
+help: Expected all crates to use `bevy` 0.14.2
+  --> Cargo.toml:10:8
+   |
+10 | bevy = { version = "0.14.2" }
+   |        ^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[deny(bevy::duplicate_bevy_dependencies)]` on by default
+
+error: could not compile `multiple-bevy-versions` (bin "multiple-bevy-versions") due to 1 previous error
+Check failed: exit status: 101.
