@@ -26,6 +26,10 @@ impl Callbacks for BevyLintCallback {
         // By setting `unstable_options = true`, we make `Session::enable_internal_lints()`
         // evaluate to true. This, combined with the `#[warn(rustc::internal)]` at the crate root,
         // enables `rustc`'s internal lints.
+        #[expect(
+            rustc::bad_opt_access,
+            reason = "We do not have access to `Session`, and must mutate `Options`."
+        )]
         if cfg!(debug_assertions) {
             config.opts.unstable_opts.unstable_options = true;
         }

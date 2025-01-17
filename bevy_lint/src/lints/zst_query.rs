@@ -88,7 +88,7 @@ impl<'tcx> LateLintPass<'tcx> for ZstQuery {
                 hir_ty.span,
                 ZST_QUERY.lint.desc,
                 None,
-                query_kind.help(&peeled),
+                query_kind.help(peeled),
             );
         }
     }
@@ -107,7 +107,7 @@ impl QueryKind {
         }
     }
 
-    fn help(&self, ty: &Ty<'_>) -> String {
+    fn help(&self, ty: Ty<'_>) -> String {
         // It should be noted that `With<Foo>` is not always the best filter to suggest.
         // While it's most often going to be what users want, there's also `Added<Foo>`
         // and `Changed<Foo>` which might be more appropriate in some cases

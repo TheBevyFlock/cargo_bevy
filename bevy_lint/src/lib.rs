@@ -11,6 +11,10 @@
 #![feature(let_chains)]
 // Warn on internal `rustc` lints that check for poor usage of internal compiler APIs.
 #![warn(rustc::internal)]
+#![allow(
+    rustc::usage_of_ty_tykind,
+    reason = "Many false positives without a valid replacement."
+)]
 
 // This is a list of every single `rustc` crate used within this library. If you need another, add
 // it here!
