@@ -35,6 +35,9 @@ jobs:
         with:
           sweep-cache: true
 
+      - name: Install Linux dependencies for Bevy
+        uses: ./.github/actions/install-linux-deps
+
       - name: Run tests
         run: |
           cargo test --workspace --all-features --all-targets
@@ -54,7 +57,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ needs.extract-rust-version.outputs.channel }}
-          components: '${{ needs.extract-rust-version.outputs.components }}, clippy'
+          components: "${{ needs.extract-rust-version.outputs.components }}, clippy"
 
       - name: Cache build artifacts
         uses: Leafwing-Studios/cargo-cache@v2
@@ -76,7 +79,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ needs.extract-rust-version.outputs.channel }}
-          components: '${{ needs.extract-rust-version.outputs.components }}, rustfmt'
+          components: "${{ needs.extract-rust-version.outputs.components }}, rustfmt"
 
       - name: Run rustfmt
         run: cargo fmt --all --check
