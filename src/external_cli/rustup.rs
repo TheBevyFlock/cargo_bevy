@@ -2,6 +2,7 @@
 
 use std::{env, ffi::OsString, process::Command};
 
+use anyhow::Context;
 use dialoguer::Confirm;
 
 /// The rustup command can be customized via the `BEVY_CLI_RUSTUP` env
@@ -33,7 +34,10 @@ pub(crate) fn install_target_if_needed(target: &str, silent: bool) -> anyhow::Re
             .with_prompt(format!(
                 "Compilation target `{target}` is missing, should I install it for you?",
             ))
-            .interact()?
+            .interact()
+            .context(
+                "failed to show interactive prompt, try using `--yes` to confirm automatically",
+            )?
         {
             anyhow::bail!("User does not want to install target `{target}`.");
         }

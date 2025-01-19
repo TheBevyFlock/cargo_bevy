@@ -3,6 +3,7 @@ use std::{
     str::FromStr,
 };
 
+use anyhow::Context;
 use dialoguer::Confirm;
 use semver::Version;
 
@@ -64,7 +65,10 @@ pub(crate) fn if_needed(
                     format!("`{program}` is missing, should I install it for you?")
                 }),
             )
-            .interact()?
+            .interact()
+            .context(
+                "failed to show interactive prompt, try using `--yes` to confirm automatically",
+            )?
     {
         exit(1);
     }
